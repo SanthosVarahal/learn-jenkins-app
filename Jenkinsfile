@@ -92,5 +92,30 @@ pipeline {
                 '''
             }
         }
+        stage('Post-Deployment Tests') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                }
+            }
+            
+            environment {
+                NETLIFY_SITE_URL = sh(script: "node_modules/.bin/netlify status | grep 'Website URL' | awk '{print \$3}'", returnStdout: true).trim()
+            }
+            
+            steps {
+                sh '''
+                    echo "Running post-deployment tests..."
+                    npx playwright test --reporter=html
+                '''
+            }
+           
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Post-Deployment HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                }
+            }
+        }
     }
 }
