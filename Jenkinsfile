@@ -38,19 +38,20 @@ pipeline {
                 '''
             }
         }
-        stage('E2E') {
+        stage('E2E Tests') {
             agent {
                 docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-noble'
+                    image 'cypress/included:12.17.1'
                     reuseNode true
                 }
             }
             steps {
                 sh '''
-                    npm install serve
-                    node_modules/.bin/serve -s build &
-                    sleep 10
-                    npx playwright test
+                    test -f build/index.html || { echo "Build failed: build/index.html not found"; exit 1; }
+                    ls -la
+                    node --version
+                    npm --version
+                    npm run e2e 
                 '''
             }
         }
