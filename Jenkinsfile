@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+        /*
         stage('Build') {
             agent {
                 docker {
@@ -14,9 +15,26 @@ pipeline {
                     ls -la
                     node --version
                     npm --version
-                    npm ci
+                    npm ci 
                     npm run build
                     ls -la
+                '''
+            }
+        }*/
+        stage('Test') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    #  test -f build/index.html || { echo "Build failed: build/index.html not found"; exit 1; }
+                    ls -la
+                    node --version
+                    npm --version
+                    npm test 
                 '''
             }
         }
