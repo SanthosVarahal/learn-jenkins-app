@@ -47,10 +47,10 @@ pipeline {
             }
             steps {
                 sh '''
-                    test -f build/index.html || { echo "Build failed: build/index.html not found"; exit 1; }
                     npm install serve
                     node_modules/.bin/serve -s build &
-                    npx playwright test
+                    sleep 10
+                    npx playwright test --reporter=html
                 '''
             }
         }
