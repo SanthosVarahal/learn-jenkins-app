@@ -104,7 +104,7 @@ pipeline {
                 }
             }
             environment {
-                NETLIFY_STAGING_URL = env.STAGING_URL
+                NETLIFY_STAGING_URL =  "${env.STAGING_URL}"
             }
 
             steps {
