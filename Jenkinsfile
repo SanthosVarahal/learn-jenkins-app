@@ -84,12 +84,40 @@ pipeline {
             steps {
                 sh '''
                     echo "Deploying the application to staging...."
-                    npm install netlify-cli@20.1.1
+                    npm install netlify-cli@20.1.1 node-jq
                     node_modules/.bin/netlify --version 
                     echo "Deploying to Netlify... Site ID: $NETLIFY_SITE_ID"
                     node_modules/.bin/netlify status 
-                    node_modules/.bin/netlify deploy --dir=build --message="Staging deployment"                  
+                    node_modules/.bin/netlify deploy --dir=build --json > deploy_output.json
+                    node_modules/.bin/jq -r '.deploy_url' deploy_output.json                 
                 '''
+                script {
+                    env.STAGING_URL = sh(script: "node_modules/.bin/jq -r '.deploy_url' deploy_output.json", returnStdout: true)
+                }
+            }
+        }
+        stage('Post-Staging Tests') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                }
+            }
+            environment {
+                NETLIFY_STAGING_URL = "$(env.STAGING_URL)"
+            }
+
+            steps {
+                sh '''
+                    echo "Running post-staging tests..."
+                    npx playwright test --reporter=html
+                '''
+            }
+           
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'staging-playwright-report', reportFiles: 'index.html', reportName: 'Post-Staging HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                }
             }
         }
 
@@ -129,8 +157,7 @@ pipeline {
             
             environment {
                 //NETLIFY_SITE_URL = sh(script: "node_modules/.bin/netlify status | grep 'Website URL' | awk '{print \$3}'", returnStdout: true).trim()
-                NETLIFY_SITE_URL = sh(script: "node_modules/.bin/netlify status | grep 'Website URL' | awk '{print \$3}' | sed 's/[[:cntrl:]]//g'", returnStdout: true).trim()
-            }
+                NETLIFY_SITE_URL = "https://resonant-sfogliatella-d94b86.netlify.app"
 
             steps {
                 sh '''
@@ -141,7 +168,7 @@ pipeline {
            
             post {
                 always {
-                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Post-Deployment HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'Prod-playwright-report', reportFiles: 'index.html', reportName: 'Post-Deployment HTML Report', reportTitles: '', useWrapperFileDirectly: true])
                 }
             }
         }
