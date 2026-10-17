@@ -83,10 +83,10 @@ pipeline {
             steps {
                 sh '''
                     echo "Deploying the application..."
-                    npm install netlify-cli@20.1.1 -g 
-                    netlify --version 
+                    npm install netlify-cli@20.1.1
+                    node_modules/.bin/netlify --version 
                     echo "Deploying to Netlify... Site ID: $NETLIFY_SITE_ID"
-                    netlify status --site $NETLIFY_SITE_ID            
+                    node_modules/.bin/netlify status --site $NETLIFY_SITE_ID            
                        
                 '''
             }
