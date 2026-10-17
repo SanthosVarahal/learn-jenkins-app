@@ -77,52 +77,34 @@ pipeline {
         stage('Deploy staging') {
             agent {
                 docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    echo "Deploying the application to staging...."
-                    npm install netlify-cli@20.1.1 
-                    npm install node-jq
-                    node_modules/.bin/netlify --version 
-                    echo "Deploying to Netlify... Site ID: $NETLIFY_SITE_ID"
-                    node_modules/.bin/netlify status 
-                    node_modules/.bin/netlify deploy --dir=build --json > deploy_output.json
-                    node_modules/.bin/node-jq -r '.deploy_url' deploy_output.json                 
-                '''
-                script {
-                    env.STAGING_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' deploy_output.json", returnStdout: true)
-                }
-            }
-        }
-        
-        stage('Post-Staging Tests') {
-            agent {
-                docker {
                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
                     reuseNode true
                 }
             }
+
             environment {
-                NETLIFY_STAGING_URL = "${env.STAGING_URL}"
+                CI_ENVIRONMENT_URL = 'STAGING_URL_TO_BE_SET'
             }
 
             steps {
                 sh '''
-                    echo "Running post-staging tests..."
-                    npx playwright test --reporter=html
+                    npm install netlify-cli node-jq
+                    node_modules/.bin/netlify --version
+                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
+                    node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
+                    CI_ENVIRONMENT_URL=$(node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json)
+                    npx playwright test  --reporter=html             
                 '''
             }
-           
+
             post {
                 always {
                     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'staging-playwright-report', reportFiles: 'index.html', reportName: 'Post-Staging HTML Report', reportTitles: '', useWrapperFileDirectly: true])
                 }
             }
         }
-
+           
         stage('approve deployment to production') {
             steps {
                 timeout(time: 1, unit: 'MINUTES') {
@@ -134,38 +116,24 @@ pipeline {
         stage('Deploy') {
             agent {
                 docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    echo "Deploying the application..."
-                    npm install netlify-cli@20.1.1
-                    node_modules/.bin/netlify --version 
-                    echo "Deploying to Netlify... Site ID: $NETLIFY_SITE_ID"
-                    node_modules/.bin/netlify status 
-                    node_modules/.bin/netlify deploy --dir=build --prod                  
-                '''
-            }
-        }
-        
-        stage('Post-Deployment Tests') {
-            agent {
-                docker {
                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
                     reuseNode true
                 }
             }
-            
+
             environment {
-                NETLIFY_SITE_URL = "https://resonant-sfogliatella-d94b86.netlify.app"
-            } // <--- Added missing closing brace here
+                CI_ENVIRONMENT_URL = 'https://resonant-sfogliatella-d94b86.netlify.app/'
+            }
 
             steps {
                 sh '''
-                    echo "Running post-deployment tests..."
-                    npx playwright test --reporter=html
+                    node --version
+                    npm install netlify-cli
+                    node_modules/.bin/netlify --version
+                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
+                    node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build --prod
+                    npx playwright test  --reporter=html
                 '''
             }
            
