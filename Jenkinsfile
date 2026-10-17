@@ -170,7 +170,9 @@ pipeline {
                 always {
                     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'Prod-playwright-report', reportFiles: 'index.html', reportName: 'Post-Deployment HTML Report', reportTitles: '', useWrapperFileDirectly: true])
                 }
-            }
-        }
-    }
+            }    
+        }   
+    }    
+}    
+
 }
