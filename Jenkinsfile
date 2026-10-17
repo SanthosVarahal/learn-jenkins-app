@@ -92,10 +92,11 @@ pipeline {
                     node_modules/.bin/jq -r '.deploy_url' deploy_output.json                 
                 '''
                 script {
-                    env.STAGING_URL = sh(script: "node_modules/.bin/jq -r '.deploy_url' deploy_output.json", returnStdout: true)
+                    env.STAGING_URL = sh(script: "node_modules/.bin/jq -r '.deploy_url' deploy_output.json", returnStdout: true).trim()
                 }
             }
         }
+        
         stage('Post-Staging Tests') {
             agent {
                 docker {
@@ -104,7 +105,7 @@ pipeline {
                 }
             }
             environment {
-                NETLIFY_STAGING_URL =  "${env.STAGING_URL}"
+                NETLIFY_STAGING_URL = "${env.STAGING_URL}"
             }
 
             steps {
@@ -147,6 +148,7 @@ pipeline {
                 '''
             }
         }
+        
         stage('Post-Deployment Tests') {
             agent {
                 docker {
@@ -156,8 +158,8 @@ pipeline {
             }
             
             environment {
-                //NETLIFY_SITE_URL = sh(script: "node_modules/.bin/netlify status | grep 'Website URL' | awk '{print \$3}'", returnStdout: true).trim()
                 NETLIFY_SITE_URL = "https://resonant-sfogliatella-d94b86.netlify.app"
+            } // <--- Added missing closing brace here
 
             steps {
                 sh '''
@@ -173,6 +175,4 @@ pipeline {
             }    
         }   
     }    
-}    
-
 }
