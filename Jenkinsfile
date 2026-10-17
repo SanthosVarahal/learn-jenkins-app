@@ -51,7 +51,7 @@ pipeline {
                     ls -la
                     node --version
                     npm --version
-                    npm run e2e 
+                    npm test:e2e
                 '''
             }
         }
