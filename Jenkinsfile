@@ -74,6 +74,25 @@ pipeline {
             }
         }
 
+        stage('Deploy staging') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    echo "Deploying the application to staging..."
+                    npm install netlify-cli@20.1.1
+                    node_modules/.bin/netlify --version 
+                    echo "Deploying to Netlify... Site ID: $NETLIFY_SITE_ID"
+                    node_modules/.bin/netlify status 
+                    node_modules/.bin/netlify deploy --dir=build --message="Staging deployment"                  
+                '''
+            }
+        }
+
         stage('Deploy') {
             agent {
                 docker {
@@ -103,7 +122,7 @@ pipeline {
             environment {
                 NETLIFY_SITE_URL = sh(script: "node_modules/.bin/netlify status | grep 'Website URL' | awk '{print \$3}'", returnStdout: true).trim()
             }
-            
+
             steps {
                 sh '''
                     echo "Running post-deployment tests..."
