@@ -92,7 +92,7 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('approve deployment to production') {
             steps {
                 timeout(time: 1, unit: 'MINUTES') {
@@ -128,7 +128,8 @@ pipeline {
             }
             
             environment {
-                NETLIFY_SITE_URL = sh(script: "node_modules/.bin/netlify status | grep 'Website URL' | awk '{print \$3}'", returnStdout: true).trim()
+                //NETLIFY_SITE_URL = sh(script: "node_modules/.bin/netlify status | grep 'Website URL' | awk '{print \$3}'", returnStdout: true).trim()
+                NETLIFY_SITE_URL = sh(script: "node_modules/.bin/netlify status | grep 'Website URL' | awk '{print \$3}' | sed 's/[[:cntrl:]]//g'", returnStdout: true).trim()
             }
 
             steps {
