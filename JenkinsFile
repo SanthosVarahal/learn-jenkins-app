@@ -32,12 +32,12 @@ pipeline {
                 docker {
                     image 'amazon/aws-cli'
                     reuseNode true
-                    args "--entrypoint=''"
+                    args "-u root --entrypoint=''"
                 }
             }
             steps {
                 sh '''
-                    sudo dnf install -y docker
+                    dnf install -y docker
                     docker build -t jenkinsapp .
                 '''
             }
