@@ -15,9 +15,6 @@ pipeline {
                     reuseNode true
                 }
             }
-            environment {
-                AWS_S3_BUCKET = 'learn-jenkins-2026-072672872451-us-east-1-an'
-            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'aws-key', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     sh '''
