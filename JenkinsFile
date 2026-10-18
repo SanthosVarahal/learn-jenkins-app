@@ -30,7 +30,7 @@ pipeline {
         stage('Build Docker Image') {
             agent {
                 docker {
-                    image 'amazon/aws-cli:latest'
+                    image 'amazon/aws-cli'
                     args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
