@@ -41,5 +41,25 @@ pipeline {
                 }
             }
         }
+
+        stage('Test') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    test -f build/index.html || { echo "Build failed: build/index.html not found"; exit 1; }
+                    npm test 
+                '''
+            }
+            post {
+                always {
+                    junit 'jest-results/junit.xml'
+                }
+            }
+        }
     }
 }
