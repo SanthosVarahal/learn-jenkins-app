@@ -4,8 +4,10 @@ pipeline {
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
     }
-
-    stage('AWS') {
+    
+    stages {
+        stage('AWS') {
+        
             agent {
                 docker {
                     image 'amazon/aws-cli'
@@ -26,7 +28,6 @@ pipeline {
             }
         }
 
-    stages {
         stage('Build') {
             agent {
                 docker {
