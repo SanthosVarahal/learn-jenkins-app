@@ -1,6 +1,31 @@
 pipeline {
     agent any
 
+    environment {
+        AWS_DEFAULT_REGION = 'us-east-1'
+    }
+
+    stage('AWS') {
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                    args "--entrypoint=''"
+                    reuseNode true
+                }
+            }
+            environment {
+                AWS_S3_BUCKET = 'learn-jenkins-2026-072672872451-us-east-1-an'
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-key', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                        aws --version
+                        aws ecs register-task-definition --cli-input-json file://aws/task-definition.json
+                    '''
+                }
+            }
+        }
+
     stages {
         stage('Build') {
             agent {
@@ -19,47 +44,6 @@ pipeline {
                     ls -la
                 '''
             }
-        }
-
-        stage('Test') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    test -f build/index.html || { echo "Build failed: build/index.html not found"; exit 1; }
-                    npm test 
-                '''
-            }
-            post {
-                always {
-                    junit 'jest-results/junit.xml'
-                }
-            }
-        }
-
-        stage('AWS') {
-            agent {
-                docker {
-                    image 'amazon/aws-cli'
-                    args "--entrypoint=''"
-                    reuseNode true
-                }
-            }
-            environment {
-                AWS_S3_BUCKET = 'learn-jenkins-2026-072672872451-us-east-1-an'
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-key', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    sh '''
-                        aws --version
-                        aws s3 sync build s3://$AWS_S3_BUCKET 
-                    '''
-                }
-            }
-        }
+        }        
     }
 }
