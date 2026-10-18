@@ -2,11 +2,11 @@
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "family": "LearnJenkinsApp-TaskDefinition-Prod",
+    "family": "nginx-web-server",
     "containerDefinitions": [
         {
-            "name": "learnjenkinsapp",
-            "image": "nginx:1.27-alpine",
+            "name": "nginx",
+            "image": "nginx:1.28-alpine",
             "portMappings": [
                 {
                     "name": "ngnix-80-tcp",
