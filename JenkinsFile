@@ -3,6 +3,9 @@ pipeline {
 
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
+        AWS_ECS_CLUSTER = 'nginx-service'
+        AWS_ECS_SERVICE = 'nginx-web-server-service-g5iwu4ov'
+        AWS_ECS_TASK_DEFINITION = 'nginx-web-server'
     }
     
     stages {
@@ -22,7 +25,8 @@ pipeline {
                         yum install -y jq
                         LATEST_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition.json | jq '.taskDefinition.revision')
                         echo "Latest Revision: $LATEST_REVISION"
-                        aws ecs update-service --cluster nginx-service --service nginx-web-server-service-g5iwu4ov --task-definition nginx-web-server:$LATEST_REVISION
+                        aws ecs update-service --cluster $AWS_ECS_CLUSTER --service $AWS_ECS_SERVICE --task-definition $AWS_ECS_TASK_DEFINITION:$LATEST_REVISION
+                        aws ecs wait services-stable --cluster $AWS_ECS_CLUSTER --services $AWS_ECS_SERVICE
                     '''
                 }
             }
